@@ -1,0 +1,77 @@
+﻿@using ToDo.Domain.Entities
+@using ToDo.ServiceInterface
+
+@if (isVisible)
+{
+    <div class="modal show" tabindex="-1" style="display: block;">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@((tasks.TaskId == 0) ? "Add Task" : "Edit Task")</h5>
+                    <button type="button" class="btn-close" aria-label="Close" @onclick="Cancel"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="TaskName" class="form-label">Task Name</label>
+                        <input type="text" class="form-control" id="TaskName" @bind="tasks.TaskName">
+                    </div>
+                    <div class="mb-3">
+                        <label for="Ststus" class="form-label">Status</label>
+                        <input type="number" class="form-control" id="Ststus" @bind="statusAsInt" min="0" max="1">
+                    </div>
+
+                   
+                   
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="Cancel">Cancel</button>
+                    <button type="button" class="btn btn-primary" @onclick="Save">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    
+    [Parameter] public EventCallback OnSave { get; set; }
+    [Inject] public ITaskService TaskService { get; set; }
+    
+    private bool isVisible;
+    
+    private Tasks tasks = new();
+
+    public void Show(Tasks tasks)
+    {
+        this.tasks = tasks;
+        isVisible = true;
+    }
+
+    private  int statusAsInt
+    {
+        get => tasks.Ststus ? 1 : 0;
+        set => tasks.Ststus = value == 1;
+    }
+
+
+
+    private async Task Save()
+    {
+        if (tasks.TaskId == 0)
+        {
+           await TaskService.AddTask(tasks);
+        }
+        else
+        {
+           await TaskService.UpdateTask(tasks);
+        }
+
+        isVisible = false;
+        await OnSave.InvokeAsync();
+    }
+
+    private void Cancel()
+    {
+        isVisible = false;
+    }
+}

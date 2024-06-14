@@ -1,0 +1,84 @@
+﻿@page "/Tasks"
+@rendermode InteractiveServer
+
+@using ToDo.Domain.Entities
+@using ToDo.ServiceInterface
+
+<h3>Task Page</h3>
+
+ <button class="btn btn-primary" @onclick="ShowAddModal">Add New Book</button> 
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Task Id</th>
+            <th>TaskName</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (tasks != null && tasks.Any())
+        {
+            @foreach (var task in tasks)
+            {
+                <tr>
+                    <td>@task.TaskId</td>
+                    <td>@task.TaskName</td>
+                    <td>@task.Ststus</td>
+                    <td>
+                        <button class="btn btn-secondary" @onclick="() => ShowEditModal(task)">Edit</button>
+                        <button class="btn btn-danger" @onclick="() => DeleteTask(task)">Delete</button>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="4">No tasks available.</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<AddEditToDoModal @ref="addEditBookModal" OnSave="RefreshList" /> 
+
+@code {
+    [Inject] ITaskService TaskService { get; set; }
+
+    private List<Tasks> tasks = new List<Tasks>(); // Initialize to an empty list
+
+    private AddEditToDoModal addEditBookModal;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTasks();
+    }
+
+    private async Task LoadTasks()
+    {
+        tasks = await TaskService.GetAllTasks();
+    }
+
+    private void ShowAddModal()
+     {
+       addEditBookModal.Show(new Tasks());
+    }
+
+    private void ShowEditModal(Tasks task)
+    {
+         addEditBookModal.Show(task);
+    }
+
+    private async Task DeleteTask(Tasks task)
+    {
+        await TaskService.DeleteTask(task.TaskId);
+        await LoadTasks(); // Ensure tasks are reloaded after deletion
+    }
+
+    private async Task RefreshList()
+    {
+        await LoadTasks();
+    }
+}
